@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/image_playing"
+        android:layout_width="@dimen/dp_48"
+        android:layout_height="@dimen/dp_48"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <TextView
+        android:id="@+id/text_name_song"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/text_name_song"
+        android:textColor="@color/color_black"
+        android:textSize="@dimen/sp_18"
+        app:layout_constraintStart_toEndOf="@id/image_playing" />
+
+    <TextView
+        android:id="@+id/text_singer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/text_singer"
+        android:textColor="@color/color_gray"
+        android:textSize="@dimen/sp_16"
+        app:layout_constraintStart_toEndOf="@id/image_playing"
+        app:layout_constraintTop_toBottomOf="@id/text_name_song" />
+
+    <ImageView
+        android:id="@+id/image_delete_song"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dp_8"
+        android:src="@drawable/ic_delete_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="@dimen/dp_1"
+        android:background="@color/color_gray"
+        android:layout_margin="@dimen/dp_8"
+        app:layout_constraintTop_toBottomOf="@id/text_singer"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</android.support.constraint.ConstraintLayout>
