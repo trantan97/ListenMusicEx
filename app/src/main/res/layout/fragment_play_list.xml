@@ -28,7 +28,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_play_list" />
-
+  
     <include
         android:id="@+id/layout_mini_player"
         layout="@layout/mini_player_layout"
