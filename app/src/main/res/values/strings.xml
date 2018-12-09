@@ -9,9 +9,9 @@
     <string name="text_name_song">Tên bài hát</string>
     <string name="text_list_play">Danh sách phát (0)</string>
     <string-array name="link_songs">
+        <item>http://data3.chiasenhac.com/downloads/1740/0/1739564-37a0496b/128/Grow%20Up%20-%20Olly%20Murs%20[128kbps_MP3].mp3</item>
         <item>http://data3.chiasenhac.com/downloads/1740/0/1739564-37a0496b/32/Grow%20Up%20-%20Olly%20Murs%20[32kbps_M4A].m4a</item>
-        <item>http://data35.chiasenhac.com/downloads/1962/0/1961006-d21506bc/32/Co%20The%20Hay%20Khong%20-%20Truong%20Tu%20Hao%20[32kbps_M4A].m4a</item>
-        <item>http://data31.chiasenhac.com/downloads/1975/0/1974489-e52ad98a/32/Anh%20Dech%20Can%20Gi%20Nhieu%20Ngoai%20Em%20-%20Den_%20Vu%20[32kbps_M4A].m4a</item>
+        <item>http://data3.chiasenhac.com/downloads/1740/0/1739564-37a0496b/32/Grow%20Up%20-%20Olly%20Murs%20[32kbps_M4A].m4a</item>
     </string-array>
     <string-array name="name_songs">
         <item>Grow Up</item>
