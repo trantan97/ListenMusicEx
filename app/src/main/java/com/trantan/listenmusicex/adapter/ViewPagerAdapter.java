@@ -19,9 +19,6 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         super(fm);
         mPlayListFragment = new PlayListFragment();
         mPlaySongFragment = new PlaySongFragment();
-
-        mPlayListFragment.setSendSongService(mPlaySongFragment);
-        mPlaySongFragment.setPlaySongToPlayList(mPlayListFragment);
     }
 
     @Override

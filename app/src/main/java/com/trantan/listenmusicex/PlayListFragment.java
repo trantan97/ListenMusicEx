@@ -1,11 +1,6 @@
 package com.trantan.listenmusicex;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,10 +13,9 @@ import android.widget.TextView;
 
 import com.trantan.listenmusicex.adapter.RecyclerAdapter;
 import com.trantan.listenmusicex.handle.OnClickSong;
-import com.trantan.listenmusicex.handle.PlayListToPlaySong;
-import com.trantan.listenmusicex.handle.PlaySongToPlayList;
 import com.trantan.listenmusicex.handle.PlayerListener;
 import com.trantan.listenmusicex.model.Song;
+import com.trantan.listenmusicex.notification.MusicNotification;
 import com.trantan.listenmusicex.service.PlaySongService;
 
 import java.util.ArrayList;
@@ -29,11 +23,11 @@ import java.util.ArrayList;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PlayListFragment extends Fragment implements OnClickSong, PlayerListener, View.OnClickListener
-        , PlaySongToPlayList {
+public class PlayListFragment extends Fragment implements
+        OnClickSong,
+        PlayerListener,
+        View.OnClickListener{
     private static final String TAG = "PlayListFragment";
-    public static final String PLAY_LIST = "PLAY_LIST";
-    public static final String BUNDLE_PLAY_LIST = "BUNDLE_PLAY_LIST";
     public static final String PLAY_AT_POSITION = " PLAY_AT_POSITION";
     public static final String PLAY_LOOP_ALL = " PLAY_LOOP_ALL";
     public static final String PLAY_LOOP_ONE = " PLAY_LOOP_ONE";
@@ -41,27 +35,20 @@ public class PlayListFragment extends Fragment implements OnClickSong, PlayerLis
     private ArrayList<Song> mSongs;
     private TextView mPlayList;
     private RecyclerView mRecyclerSongs;
-    private PlayListToPlaySong mPlayListToPlaySong;
     private View mMiniPlayer;
     private ImageView mPlayPause;
     private ImageView mNextSong;
     private ImageView mPreviousSong;
     private ProgressBar mProgressBar;
     private boolean mIsPlaying;
-    private boolean mIsBound;
     private boolean mIsLoopAll;
     private boolean mIsLoopONE;
-    private ServiceConnection mConnection;
-    private PlaySongService mSongService;
     private RecyclerAdapter mAdapter;
-
+    private PlaySongService mSongService;
     public PlayListFragment() {
         // Required empty public constructor
     }
 
-    public void setSendSongService(PlayListToPlaySong sendSongService) {
-        mPlayListToPlaySong = sendSongService;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,6 +62,8 @@ public class PlayListFragment extends Fragment implements OnClickSong, PlayerLis
     private void setUpUi(View view) {
         MainActivity mainActivity = (MainActivity) getActivity();
         mSongs = mainActivity.loadSongs();
+        mSongService = mainActivity.getSongService();
+        mSongService.addPlayerListener(this);
 
         mPlayList = view.findViewById(R.id.text_play_list);
         mRecyclerSongs = view.findViewById(R.id.recycler_songs);
@@ -89,25 +78,24 @@ public class PlayListFragment extends Fragment implements OnClickSong, PlayerLis
         mRecyclerSongs.setAdapter(mAdapter);
         mPlayList.setText(String.format(LIST_SONGS, mSongs.size()));
 
-        mConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(TAG, "onServiceConnected: ");
-                mSongService = ((PlaySongService.MyBinder) service).getService();
-                mSongService.setPlayerListener(PlayListFragment.this);
-                mIsBound = true;
-                //send to playsongfragment
-                mPlayListToPlaySong.sendSongService(mSongService);
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                Log.d(TAG, "onServiceDisconnected: ");
-                mIsBound = false;
-                getActivity().unbindService(mConnection);
-            }
-        };
-        bindService();
+//        mConnection = new ServiceConnection() {
+//            @Override
+//            public void onServiceConnected(ComponentName name, IBinder service) {
+//                Log.d(TAG, "onServiceConnected: ");
+//                mSongService = ((PlaySongService.MyBinder) service).getService();
+//                mIsBound = true;
+//                //send to playsongfragment
+//                mPlayListToPlaySong.sendSongService(mSongService);
+//            }
+//
+//            @Override
+//            public void onServiceDisconnected(ComponentName name) {
+//                Log.d(TAG, "onServiceDisconnected: ");
+//                mIsBound = false;
+//                getActivity().unbindService(mConnection);
+//            }
+//        };
+//        bindService();
         mPlayPause.setOnClickListener(this);
         mNextSong.setOnClickListener(this);
         mPreviousSong.setOnClickListener(this);
@@ -120,34 +108,27 @@ public class PlayListFragment extends Fragment implements OnClickSong, PlayerLis
         mSongService.changeSong(position);
     }
 
-    public void bindService() {
-        Intent intent = new Intent(getContext(), PlaySongService.class);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(PLAY_LIST, mSongs);
-        intent.putExtra(BUNDLE_PLAY_LIST, bundle);
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
     @Override
     public void listenCurrentTime(int currentTime) {
         mMiniPlayer.setVisibility(View.VISIBLE);
         mProgressBar.setProgress(currentTime);
-        //
-        mPlayListToPlaySong.sendCurrentTime(currentTime);
     }
 
     @Override
     public void listenTotalTime(int totalTime) {
         mPlayPause.setImageResource(R.drawable.ic_pause_24dp);
         mProgressBar.setMax(totalTime);
-        //
-        mPlayListToPlaySong.sendDuration(totalTime);
     }
 
     @Override
     public void listenChangeSong(int position) {
         mAdapter.setSelectedPosition(position);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void listenPausePlaySong() {
+        changeImagePlayPause();
     }
 
     @Override
@@ -167,21 +148,15 @@ public class PlayListFragment extends Fragment implements OnClickSong, PlayerLis
     }
 
     private void changePlayPause() {
-        mPlayListToPlaySong.sendChangePlayPause();
-        changeImagePlayPause();
-
         if (mSongService.isPlaying()) mSongService.pausePlayer();
         else mSongService.startPlayer();
-    }
-
-    @Override
-    public void sendChangePlayPause() {
+        MusicNotification.updateNotification(mSongService.isPlaying());
         changeImagePlayPause();
     }
 
     private void changeImagePlayPause() {
-        if (mSongService.isPlaying()) mPlayPause.setImageResource(R.drawable.ic_play_24dp);
-        else mPlayPause.setImageResource(R.drawable.ic_pause_24dp);
+        if (mSongService.isPlaying()) mPlayPause.setImageResource(R.drawable.ic_pause_24dp);
+        else mPlayPause.setImageResource(R.drawable.ic_play_24dp);
 
     }
 }

@@ -10,13 +10,15 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.trantan.listenmusicex.PlayListFragment;
+import com.trantan.listenmusicex.MainActivity;
 import com.trantan.listenmusicex.handle.PlayerHandler;
 import com.trantan.listenmusicex.handle.PlayerListener;
 import com.trantan.listenmusicex.model.Song;
+import com.trantan.listenmusicex.notification.MusicNotification;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PlaySongService extends Service implements PlayerHandler,
         MediaPlayer.OnCompletionListener,
@@ -27,13 +29,14 @@ public class PlaySongService extends Service implements PlayerHandler,
     public static final String ACTION_PLAY_PAUSE = "ACTION_PLAY_PAUSE";
     public static final String ACTION_NEXT = "ACTION_NEXT";
     public static final int DEFAULT_POSITION = -1;
+    public static final String ID_CHANNEL = "ID_CHANNEL";
     private MediaPlayer mMediaPlayer;
     private ArrayList<Song> mSongs;
     private boolean mIsLoopAll = true;
     private IBinder mIBinder;
     private int mPosition;
     private CurrentTimeTask timeTask;
-    private PlayerListener mPlayerListener;
+    private List<PlayerListener> mPlayerListeners;
 
     @Override
     public void onCreate() {
@@ -45,8 +48,8 @@ public class PlaySongService extends Service implements PlayerHandler,
 
     @Override
     public IBinder onBind(Intent intent) {
-        Bundle bundle = intent.getBundleExtra(PlayListFragment.BUNDLE_PLAY_LIST);
-        mSongs = (ArrayList<Song>) bundle.getSerializable(PlayListFragment.PLAY_LIST);
+        Bundle bundle = intent.getBundleExtra(MainActivity.BUNDLE_PLAY_LIST);
+        mSongs = (ArrayList<Song>) bundle.getSerializable(MainActivity.PLAY_LIST);
         return mIBinder;
     }
 
@@ -94,6 +97,7 @@ public class PlaySongService extends Service implements PlayerHandler,
                 if (mMediaPlayer.isPlaying()) {
                     pausePlayer();
                 } else startPlayer();
+                MusicNotification.updateNotification(isPlaying());
                 break;
             }
             default:
@@ -108,8 +112,9 @@ public class PlaySongService extends Service implements PlayerHandler,
         return mMediaPlayer;
     }
 
-    public void setPlayerListener(PlayerListener playerListener) {
-        mPlayerListener = playerListener;
+    public void addPlayerListener(PlayerListener playerListener) {
+        if (mPlayerListeners == null) mPlayerListeners = new ArrayList<>();
+        mPlayerListeners.add(playerListener);
     }
 
     public Song getCurrentSong() {
@@ -118,12 +123,20 @@ public class PlaySongService extends Service implements PlayerHandler,
 
     @Override
     public void startPlayer() {
-        if (mMediaPlayer != null) mMediaPlayer.start();
+        if (mMediaPlayer != null) {
+            mMediaPlayer.start();
+            for (PlayerListener playerListener : mPlayerListeners) {
+                playerListener.listenPausePlaySong();
+            }
+        }
     }
 
     @Override
     public void pausePlayer() {
         if (isPlaying()) mMediaPlayer.pause();
+        for (PlayerListener playerListener : mPlayerListeners) {
+            playerListener.listenPausePlaySong();
+        }
     }
 
     @Override
@@ -171,7 +184,10 @@ public class PlaySongService extends Service implements PlayerHandler,
         }
         Log.d(TAG, "changeSong: " + position);
         mPosition = position;
-        mPlayerListener.listenChangeSong(position);
+
+        for (PlayerListener playerListener : mPlayerListeners) {
+            playerListener.listenChangeSong(mPosition);
+        }
         createPlayer(position);
     }
 
@@ -197,7 +213,11 @@ public class PlaySongService extends Service implements PlayerHandler,
         timeTask = new CurrentTimeTask();
         timeTask.execute();
         mMediaPlayer.start();
-        mPlayerListener.listenTotalTime(getDuration());
+
+        for (PlayerListener playerListener : mPlayerListeners) {
+            playerListener.listenTotalTime(getDuration());
+        }
+        MusicNotification.setUpNotification(this, mSongs.get(mPosition));
     }
 
     @Override
@@ -241,7 +261,9 @@ public class PlaySongService extends Service implements PlayerHandler,
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            mPlayerListener.listenCurrentTime(values[0]);
+            for (PlayerListener playerListener : mPlayerListeners) {
+                playerListener.listenCurrentTime(values[0]);
+            }
         }
     }
 }

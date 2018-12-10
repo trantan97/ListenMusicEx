@@ -4,4 +4,5 @@ public interface PlayerListener {
     void listenCurrentTime(int currentTime);
     void listenTotalTime(int totalTime);
     void listenChangeSong(int position);
+    void listenPausePlaySong();
 }
